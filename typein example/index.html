@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stylish Type-In Demo</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #2b2b2b; /* Dark gray background */
+            font-family: 'Arial', sans-serif;
+        }
+        .container {
+            background-color: #3c3c3c; /* Slightly lighter gray container */
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        #numberInput {
+            font-size: 2.5em;
+            font-family: 'Courier New', monospace;
+            padding: 15px;
+            width: 400px; /* Much wider input */
+            border: none;
+            border-radius: 8px;
+            background-color: #4a4a4a; /* Lighter gray input */
+            color: #e0e0e0; /* Light text for contrast */
+            text-align: center;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+        .button-grid {
+            display: grid;
+            grid-template-rows: 1fr 1fr; /* Two rows: up, then left/down/right */
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            width: 180px;
+            margin: 0 auto;
+        }
+        button {
+            font-size: 1.5em;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background-color: #6b6b6b; /* Light gray buttons */
+            color: #e0e0e0;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #808080; /* Slightly lighter on hover */
+        }
+        button.active {
+            background-color: #ff9500; /* Orange when pressed */
+        }
+        .up-btn { grid-column: 2; grid-row: 1; } /* Centered above */
+        .left-btn { grid-column: 1; grid-row: 2; }
+        .down-btn { grid-column: 2; grid-row: 2; }
+        .right-btn { grid-column: 3; grid-row: 2; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <input type="text" id="numberInput" value="701.234">
+        <div class="button-grid">
+            <button class="up-btn">↑</button>
+            <button class="left-btn">←</button>
+            <button class="down-btn">↓</button>
+            <button class="right-btn">→</button>
+        </div>
+    </div>
+
+    <script>
+        const input = document.getElementById('numberInput');
+        const buttons = {
+            'ArrowUp': document.querySelector('.up-btn'),
+            'ArrowLeft': document.querySelector('.left-btn'),
+            'ArrowDown': document.querySelector('.down-btn'),
+            'ArrowRight': document.querySelector('.right-btn')
+        };
+
+        input.addEventListener('keydown', (e) => {
+            let value = input.value;
+            let pos = input.selectionStart;
+            let parts = value.split('.');
+            let before = parts[0];
+            let after = parts[1] || '';
+
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                const button = buttons[e.key];
+                button.classList.add('active');
+                setTimeout(() => button.classList.remove('active'), 200);
+
+                let digitPos = pos < before.length ? pos : pos - before.length - 1;
+                let isBeforeDecimal = pos <= before.length;
+                let section = isBeforeDecimal ? before : after;
+                if (digitPos >= 0 && digitPos < section.length) {
+                    let digits = section.split('');
+                    digits[digitPos] = parseInt(digits[digitPos]) + (e.key === 'ArrowUp' ? 1 : -1);
+                    if (digits[digitPos] > 9) digits[digitPos] = 0;
+                    if (digits[digitPos] < 0) digits[digitPos] = 9;
+                    if (isBeforeDecimal) before = digits.join('');
+                    else after = digits.join('');
+                    input.value = `${before}.${after}`;
+                    setTimeout(() => input.setSelectionRange(pos, pos), 0);
+                }
+            } else if (e.key === 'ArrowLeft' && pos === 0) {
+                e.preventDefault();
+                const button = buttons['ArrowLeft'];
+                button.classList.add('active');
+                setTimeout(() => button.classList.remove('active'), 200);
+
+                before = '0' + before;
+                input.value = `${before}.${after}`;
+                setTimeout(() => input.setSelectionRange(0, 0), 0);
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                const button = buttons['ArrowRight'];
+                button.classList.add('active');
+                setTimeout(() => button.classList.remove('active'), 200);
+
+                if (pos === value.length) {
+                    after += '0';
+                    input.value = `${before}.${after}`;
+                    const newPos = input.value.length - 1;
+                    setTimeout(() => input.setSelectionRange(newPos, newPos), 0);
+                } else {
+                    setTimeout(() => input.setSelectionRange(pos + 1, pos + 1), 0);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
